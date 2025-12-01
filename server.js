@@ -9,11 +9,10 @@ const app = express();
 
 
 // Middleware
-app.use(cors({
-    origin: '*',
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 // Servir les fichiers statiques (images uploadées)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
