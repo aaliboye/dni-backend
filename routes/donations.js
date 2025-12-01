@@ -105,6 +105,8 @@ router.post('/callback', async (req, res) => {
       return res.status(404).json({ error: 'Don non trouvé' });
     }
 
+    
+
     if (status === 'success') {
       donation.statut = 'reussi';
       
@@ -136,23 +138,86 @@ router.post('/callback', async (req, res) => {
 });
 
 // GET tous les dons
-router.get('/', async (req, res) => {
-  try {
-    const { projetId, statut } = req.query;
+// router.get('/', async (req, res) => {
+//   try {
+//     const { projetId, statut } = req.query;
     
-    const filter = {};
-    if (projetId) filter.projet = projetId;
-    if (statut) filter.statut = statut;
+//     const filter = {};
+//     if (projetId) filter.projet = projetId;
+//     if (statut) filter.statut = statut;
 
-    const donations = await Donation.find(filter)
-      .populate('projet', 'nom description')
-      .sort({ dateCreation: -1 });
+//     const donations = await Donation.find(filter)
+//       .populate('projet', 'nom description')
+//       .sort({ dateCreation: -1 });
 
-    res.json(donations);
+//     res.json(donations);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+// POST callback sécurisé
+router.post('/callback', async (req, res) => {
+  try {
+    const { donationId, status, transactionId } = req.body;
+
+    // Vérif paramètres
+    if (!donationId || !status) {
+      return res.status(400).json({ error: 'Paramètres invalides' });
+    }
+
+    const donation = await Donation.findById(donationId);
+    if (!donation) {
+      return res.status(404).json({ error: 'Don non trouvé' });
+    }
+
+    // ⛔ Empêcher double traitement
+    if (donation.statut === 'reussi') {
+      return res.json({
+        success: true,
+        message: "Donation déjà confirmée — aucun changement.",
+        donation
+      });
+    }
+
+    if (status === 'success') {
+      // Marquer comme payé
+      donation.statut = 'reussi';
+
+      if (transactionId) {
+        donation.transactionId = transactionId;
+      }
+
+      // 🔐 IDÉMPOTENCE : on ne crédite qu'une seule fois !
+      const project = await Project.findById(donation.projet);
+      if (project) {
+        project.soldeActuel += donation.montant;
+        await project.save();
+      }
+
+    } else if (status === 'error') {
+      donation.statut = 'echoue';
+
+      if (transactionId) {
+        donation.transactionId = transactionId;
+      }
+    }
+
+    await donation.save();
+
+    return res.json({
+      success: true,
+      donation,
+      message: status === 'success'
+        ? "Don confirmé"
+        : "Paiement échoué"
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Erreur callback:", error);
+    return res.status(500).json({ error: error.message });
   }
 });
+
 
 // GET un don
 router.get('/:id', async (req, res) => {
