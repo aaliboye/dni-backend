@@ -67,6 +67,7 @@ router.post('/', upload.array('images', 5), async (req, res) => {
       description,
       objectifSolde: Number(objectifSolde),
       images,
+      limit: false,
       dateFin: dateFin || null
     });
 

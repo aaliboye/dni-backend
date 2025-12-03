@@ -12,7 +12,7 @@ const projectSchema = new mongoose.Schema({
   },
   objectifSolde: {
     type: Number,
-    required: [true, 'L\'objectif de collecte est requis'],
+    required: [false, 'L\'objectif de collecte est requis'],
     min: [0, 'L\'objectif doit être positif']
   },
   soldeActuel: {
@@ -27,6 +27,10 @@ const projectSchema = new mongoose.Schema({
   actif: {
     type: Boolean,
     default: true
+  },
+  limit: {
+    type: Boolean,
+    default: false
   },
   dateCreation: {
     type: Date,
