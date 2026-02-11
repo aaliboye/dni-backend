@@ -43,7 +43,7 @@ router.post('/create', async (req, res) => {
           'Authorization': `Bearer ${process.env.NABOO_TOKEN}`
         },
         body: JSON.stringify({
-          method_of_payment: ['WAVE', 'ORANGE_MONEY'],
+          method_of_payment: ['WAVE', 'ORANGE_MONEY', 'bank'],
           products: [{
             name: project.nom,
             category: typeDon || 'Don',
